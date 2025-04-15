@@ -1,0 +1,323 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						6,
+						9
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Release-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.2"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						2,
+						3,
+						4,
+						5,
+						6,
+						7
+					]
+				},
+				{
+					"build" : "arrangements/external/oneTBB",
+					"childIndexes" : 
+					[
+						2,
+						3,
+						4,
+						5
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-arrangements.external.oneTBB-Release-4acec56d80e57b6316df.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.1"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "arrangements/external/oneTBB"
+				},
+				{
+					"build" : "arrangements/external/oneTBB/src/tbb",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-arrangements.external.oneTBB.src.tbb-Release-ee3efbf4ad85d7cb5b99.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.1"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 1,
+					"source" : "arrangements/external/oneTBB/src/tbb",
+					"targetIndexes" : 
+					[
+						9
+					]
+				},
+				{
+					"build" : "arrangements/external/oneTBB/src/tbbmalloc",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-arrangements.external.oneTBB.src.tbbmalloc-Release-8aaf963116ae500e8a39.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.1"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 1,
+					"source" : "arrangements/external/oneTBB/src/tbbmalloc",
+					"targetIndexes" : 
+					[
+						10
+					]
+				},
+				{
+					"build" : "arrangements/external/oneTBB/src/tbbmalloc_proxy",
+					"jsonFile" : "directory-arrangements.external.oneTBB.src.tbbmalloc_proxy-Release-da75625164c60041710f.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.1"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 1,
+					"source" : "arrangements/external/oneTBB/src/tbbmalloc_proxy"
+				},
+				{
+					"build" : "arrangements/external/oneTBB/cmake/post_install",
+					"jsonFile" : "directory-arrangements.external.oneTBB.cmake.post_install-Release-ebcb3930faf08a3f7b13.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.1"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 1,
+					"source" : "arrangements/external/oneTBB/cmake/post_install"
+				},
+				{
+					"build" : "imgui",
+					"childIndexes" : 
+					[
+						7
+					],
+					"jsonFile" : "directory-imgui-Release-33b2769a95e269fde4ff.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.2"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "arrangements/external/Cinolib/external/imgui",
+					"targetIndexes" : 
+					[
+						1
+					]
+				},
+				{
+					"build" : "imgui/glfw",
+					"childIndexes" : 
+					[
+						8
+					],
+					"jsonFile" : "directory-imgui.glfw-Release-fc9f2b62e1121db68864.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.0"
+					},
+					"parentIndex" : 6,
+					"projectIndex" : 2,
+					"source" : "arrangements/external/Cinolib/external/imgui/glfw"
+				},
+				{
+					"build" : "imgui/glfw/src",
+					"jsonFile" : "directory-imgui.glfw.src-Release-aac77f91d781818ed56a.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.0"
+					},
+					"parentIndex" : 7,
+					"projectIndex" : 2,
+					"source" : "arrangements/external/Cinolib/external/imgui/glfw/src",
+					"targetIndexes" : 
+					[
+						0
+					]
+				},
+				{
+					"build" : "shewchuk_predicates",
+					"jsonFile" : "directory-shewchuk_predicates-Release-6512ba9a19cb284fc015.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.14"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "arrangements/external/Cinolib/external/shewchuk_predicates",
+					"targetIndexes" : 
+					[
+						8
+					]
+				}
+			],
+			"name" : "Release",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						2
+					],
+					"directoryIndexes" : 
+					[
+						0,
+						6,
+						9
+					],
+					"name" : "mesh_booleans",
+					"targetIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4,
+						5
+					],
+					"name" : "TBB",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						9,
+						10
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						7,
+						8
+					],
+					"name" : "GLFW",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 8,
+					"id" : "glfw::@2fb04e988a43665c8296",
+					"jsonFile" : "target-glfw-Release-a11113a9e276cb2aa253.json",
+					"name" : "glfw",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "imgui::@45ca6dacf63e9879b888",
+					"jsonFile" : "target-imgui-Release-1acbe261d6f0b2897e9e.json",
+					"name" : "imgui",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "mesh_booleans::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-mesh_booleans-Release-0aa04c9ddf3fa72d7da9.json",
+					"name" : "mesh_booleans",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "mesh_booleans_arap::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-mesh_booleans_arap-Release-0cf23aebea3f98aff990.json",
+					"name" : "mesh_booleans_arap",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "mesh_booleans_bug::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-mesh_booleans_bug-Release-df6f58d8bcd3a96a89e7.json",
+					"name" : "mesh_booleans_bug",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "mesh_booleans_inputcheck::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-mesh_booleans_inputcheck-Release-9911254d890130cbce3c.json",
+					"name" : "mesh_booleans_inputcheck",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "mesh_booleans_rotation::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-mesh_booleans_rotation-Release-06d2d1837ae0ee258b62.json",
+					"name" : "mesh_booleans_rotation",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "mesh_booleans_stencil::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-mesh_booleans_stencil-Release-d00f68360cf650b01aa0.json",
+					"name" : "mesh_booleans_stencil",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 9,
+					"id" : "shewchuk_predicates::@d0b0aee035d36b842636",
+					"jsonFile" : "target-shewchuk_predicates-Release-3fe9df00a702bc718762.json",
+					"name" : "shewchuk_predicates",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "tbb::@4e762e095b2935139927",
+					"jsonFile" : "target-tbb-Release-5978be01fa5062c6d981.json",
+					"name" : "tbb",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "tbbmalloc::@5634186ffc971debe633",
+					"jsonFile" : "target-tbbmalloc-Release-f783143fad81e69e5cc0.json",
+					"name" : "tbbmalloc",
+					"projectIndex" : 1
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/michele/Documents/GitHub/SegmentationFault/cmake-build-release",
+		"source" : "/home/michele/Documents/GitHub/SegmentationFault"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}

@@ -203,7 +203,7 @@ class MultiPool {
 	uint32_t max_block_size;
 
 	IN_pool& pickPoolFromSize(uint32_t bs) {
-		auto cz = std::countl_zero(bs - 1);
+		auto cz = std::__countl_zero(bs - 1);
 		cz = (cz == 32) ? (31) : (cz);
 		return IN_pools[31 - cz];
 

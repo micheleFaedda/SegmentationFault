@@ -39,6 +39,9 @@
 #include "io_functions.h"
 #include <tbb/tbb.h>
 
+bool print_debug = false;
+bool profiling = false;
+
 inline void customBooleanPipeline(std::vector<genericPoint*>& arr_verts, std::vector<uint>& arr_in_tris,
                                   std::vector<uint>& arr_out_tris, std::vector<std::bitset<NBIT>>& arr_in_labels,
                                   std::vector<DuplTriInfo>& dupl_triangles, Labels& labels,
@@ -46,9 +49,9 @@ inline void customBooleanPipeline(std::vector<genericPoint*>& arr_verts, std::ve
                                   const BoolOp &op, std::vector<double> &bool_coords, std::vector<uint> &bool_tris,
                                   std::vector< std::bitset<NBIT>> &bool_labels)
 {
-    FastTrimesh tm(arr_verts, arr_out_tris, true);
+    FastTrimesh tm(arr_verts, arr_out_tris, false);
 
-    computeAllPatches(tm, labels, patches, true);
+    computeAllPatches(tm, labels, patches, false);
 
     // the informations about duplicated triangles (removed in arrangements) are restored in the original structures
     addDuplicateTrisInfoInStructures(dupl_triangles, arr_in_tris, arr_in_labels, octree);
@@ -56,6 +59,8 @@ inline void customBooleanPipeline(std::vector<genericPoint*>& arr_verts, std::ve
     // parse patches with octree and rays
     cinolib::vec3d max_coords(octree.root->bbox.max.x() +0.5, octree.root->bbox.max.y() +0.5, octree.root->bbox.max.z() +0.5);
     computeInsideOut(tm, patches, octree, arr_verts, arr_in_tris, arr_in_labels, max_coords, labels);
+    std::cout<<"sto entrando"<<std::endl;
+    //computeInsideOutCustom(tm, patches, octree, arr_verts, arr_in_tris, arr_in_labels, max_coords, labels);
 
     // booleand operations
     uint num_tris_in_final_solution;
@@ -96,7 +101,8 @@ inline void booleanPipeline(const std::vector<double> &in_coords, const std::vec
     cinolib::Octree octree; // built with arr_in_tris and arr_in_labels
 
     customArrangementPipeline(in_coords, in_tris, in_labels, arr_in_tris, arr_in_labels, arena, arr_verts,
-                              arr_out_tris, labels, octree, dupl_triangles, true);
+                              arr_out_tris, labels, octree, dupl_triangles, false);
+
 
     customBooleanPipeline(arr_verts, arr_in_tris, arr_out_tris, arr_in_labels, dupl_triangles, labels,
                           patches, octree, op, bool_coords, bool_tris, bool_labels);
@@ -594,6 +600,7 @@ inline void computeInsideOut(const FastTrimesh &tm, const std::vector<phmap::fla
                              const std::vector<std::bitset<NBIT>> &in_labels, const cinolib::vec3d &max_coords, Labels &labels)
 {
     tbb::spin_mutex mutex;
+
     tbb::parallel_for((uint)0, (uint)patches.size(), [&](uint p_id)
    {
         const phmap::flat_hash_set<uint> &patch_tris = patches[p_id];
@@ -1597,4 +1604,323 @@ inline void loadInputWithLabels(const string &filename, std::vector<double> &coo
 
         labels.push_back(static_cast<uint>(m.poly_data(t_id).label));
     }
+}
+
+
+/*********************************************************/
+
+inline void computeInsideOutCustom(const FastTrimesh &tm, const std::vector<phmap::flat_hash_set<uint>> &patches, const cinolib::Octree &octree,
+                                   const std::vector<genericPoint *> &in_verts, const std::vector<uint> &in_tris,
+                                   const std::vector<std::bitset<NBIT>> &in_labels, const cinolib::vec3d &max_coords, Labels &labels)
+{
+    tbb::spin_mutex mutex;
+    if(print_debug){
+        std::cout << "::::INFO PATCHES::::::" << std::endl;
+        std::cout << "N° of patches: " << patches.size() << std::endl;
+        std::cout << "::::::::::::::::::::::" << std::endl;
+    }
+    std::bitset <NBIT> labels_patch [patches.size()];
+
+
+    std::vector<bigrational> in_verts_rational;
+    in_verts_rational.resize(in_verts.size()*3);
+    bool is_rational = false;
+
+    //tbb::parallel_for((uint)0, (uint)patches.size(), [&](uint p_id)
+    for(uint p_id = 0; p_id < patches.size(); ++p_id) //For each patch
+    {
+        const phmap::flat_hash_set<uint> &patch_tris = patches[p_id];
+        const std::bitset<NBIT> &patch_surface_label = labels.surface[*patch_tris.begin()]; // label of the first triangle of the patch
+        std::bitset<NBIT> patch_surface_label_tmp = patch_surface_label;
+
+        Ray ray;
+        RationalRay rational_ray;
+        std::cout << "patch numero: " << p_id << std::endl;
+        //findRayEndpoints(tm, patch_tris, max_coords, ray);
+        findRayEndpointsCustom(tm, patch_tris, max_coords, ray, rational_ray, in_verts, in_verts_rational, is_rational,
+          true);
+        phmap::flat_hash_set<uint> tmp_inters;
+
+        //if rational ray is equal to -1, it means that the ray is defined by floating points
+        if(print_debug){
+            string full_implicit = is_rational  ? "TRUE" : "FALSE";
+            std::cout << "The Patch is full implicit? -> " << full_implicit << std::endl;
+        }
+
+        if(rational_ray.tv[0] != -1) {//is defined
+           if(print_debug) std::cout << "PROCESSING TRIANGLE IN PATCH N° : " << p_id << std::endl;
+            std::vector<IntersectionPointRationals> inter_rat;
+            inter_rat.resize(300);
+
+
+
+            //findIntersectionsAlongRayRationals(tm, patches, octree, in_verts, in_labels, labels, rational_ray, p_id,
+                                               //tmp_inters, inter_rat, in_verts_rational, in_tris);
+
+
+            ///profiling and prune intersections and sort along the ray
+            std::vector<uint> inters_tris_rat;
+
+            //pruneIntersectionsAndSortAlongRayRationals(rational_ray, tm, in_verts, in_tris, in_labels, tmp_inters,
+                                                      // patch_surface_label, inter_rat, inters_tris_rat,labels,patch_surface_label_tmp,
+                                                       //patches, in_verts_rational);
+
+
+            ///profiling and analyze sorted intersections
+            std::bitset<NBIT> patch_inner_label;
+
+            //analyzeSortedIntersectionsRationals(rational_ray, tm, in_verts, inter_rat, patch_inner_label, labels, in_labels, in_verts_rational, in_tris);
+
+
+            ///propagate inner labels on patch
+            propagateInnerLabelsOnPatch(patch_tris, patch_inner_label, labels);
+
+        }else {
+
+            cinolib::AABB rayAABB(cinolib::vec3d(ray.v0.X(), ray.v0.Y(), ray.v0.Z()),
+                                  cinolib::vec3d(ray.v1.X(), ray.v1.Y(), ray.v1.Z()));
+
+            intersects_box(octree, rayAABB, tmp_inters);
+            std::vector<uint> sorted_inters;
+            pruneIntersectionsAndSortAlongRay(ray, in_verts, in_tris, in_labels, tmp_inters, patch_surface_label,
+                                              sorted_inters);
+
+            std::bitset<NBIT> patch_inner_label;
+            analyzeSortedIntersections(ray, in_verts, in_tris, in_labels, sorted_inters, patch_inner_label);
+            propagateInnerLabelsOnPatch(patch_tris, patch_inner_label, labels);
+        }
+    }
+    //);
+}
+
+
+inline void findRayEndpointsCustom(const FastTrimesh &tm, const phmap::flat_hash_set<uint> &patch, const cinolib::vec3d &max_coords,
+                                   Ray &ray, RationalRay &rational_ray, const std::vector<genericPoint *> &in_verts,
+                                   std::vector<bigrational> &in_verts_rational, bool &is_rational, bool debug)
+{
+    // check for an explicit point (all operations with explicits are faster)
+    int v_id = -1;
+    if(!debug){
+        for(uint t_id : patch){
+            const uint tv[3] = {tm.triVertID(t_id, 0), tm.triVertID(t_id, 1), tm.triVertID(t_id, 2)};
+
+            if (tm.vert(tv[0])->isExplicit3D() && tm.vertInfo(tv[0]) == 0)      v_id = static_cast<int>(tv[0]);
+                else if (tm.vert(tv[1])->isExplicit3D() && tm.vertInfo(tv[1]) == 0) v_id = static_cast<int>(tv[1]);
+                else if (tm.vert(tv[2])->isExplicit3D() && tm.vertInfo(tv[2]) == 0) v_id = static_cast<int>(tv[2]);
+
+                if (v_id != -1)
+                {
+                    is_rational = false;
+                    const explicitPoint3D &v = tm.vert(v_id)->toExplicit3D();
+                    ray.v0  = explicitPoint3D(v.X(), v.Y(), v.Z());
+                    ray.v1 = explicitPoint3D(max_coords.x(), v.Y(), v.Z());
+                    return;
+                }
+            }
+    }
+
+    //take the patch with triangle with t_id_aux and iterate through the triangles
+    in_verts_rational.resize(in_verts.size()*3);
+
+    if(!is_rational) {
+
+        is_rational = true;
+        for (uint i = 0; i < in_verts.size(); i++) {
+            std::cout << "vertex " << i << "/"<< in_verts.size()<<std::endl;
+            if (i == 8558) {
+
+                int l = 21;
+                l = l + 2;
+                std::cout<<"print debug: " << l << std::endl;
+
+                genericPoint * point = in_verts[i];
+                bool isLPI = point->isLPI();
+                std::cout << isLPI << std::endl;
+
+                implicitPoint3D_LPI lpi_conv = point->toLPI();
+
+                bool P = lpi_conv.P().isExplicit3D();
+                bool Q = lpi_conv.Q().isExplicit3D();
+                bool R = lpi_conv.R().isExplicit3D();
+                bool S = lpi_conv.S().isExplicit3D();
+                bool T = lpi_conv.T().isExplicit3D();
+                std::cout << "P Q R S T" << std::endl;
+                std::cout << P << std::endl;
+                std::cout << Q << std::endl;
+                std::cout << R << std::endl;
+                std::cout << S << std::endl;
+                std::cout << T << std::endl;
+                std::cout.precision(18);
+                std::cout << lpi_conv.P() << std::endl;
+                std::cout << lpi_conv.Q() << std::endl;
+                std::cout << lpi_conv.R() << std::endl;
+                std::cout << lpi_conv.S() << std::endl;
+                std::cout << lpi_conv.T() << std::endl;
+                genericPoint * new_P = new implicitPoint3D_LPI(lpi_conv.P(), lpi_conv.Q(), lpi_conv.R(), lpi_conv.S(), lpi_conv.T());
+
+
+                genericPoint * new_P2;
+                const genericPoint * P_tmp = new explicitPoint3D(-3187387764.50317621, 1126377053.35020828, 188836791.971181154);
+                const genericPoint * Q_tmp = new explicitPoint3D(-3149376875.99077082, 1267182566.25400305, 66971483.9567909241);
+                const genericPoint * R_tmp = new explicitPoint3D(-3076994817.51175404, 1138988462.58166265, 171892881.34736976);
+                const genericPoint * S_tmp = new explicitPoint3D(-3234895480.78921461, 1320481356.62345767, 195023508.552951127);
+                const genericPoint * T_tmp = new explicitPoint3D(-3270817787.86637497, 1300215181.04815841, 1.39057735376339457e-06);
+
+                genericPoint * new_LPI2 = new implicitPoint3D_LPI(P_tmp->toExplicit3D(), Q_tmp->toExplicit3D(), R_tmp->toExplicit3D(), S_tmp->toExplicit3D(), T_tmp->toExplicit3D());
+
+                bigrational x_tmp, y_tmp, z_tmp;
+                new_LPI2->getExactXYZCoordinates(x_tmp,y_tmp,z_tmp);
+                //new_P->getExactXYZCoordinates(x_tmp,y_tmp,z_tmp);
+
+
+
+
+                //point->getExactXYZCoordinates(x_tmp, y_tmp,z_tmp);
+
+
+
+
+
+            }
+            bigrational x, y, z;
+            in_verts[i]->getExactXYZCoordinates(x, y, z);
+            in_verts_rational[i * 3]     = x;
+            in_verts_rational[i * 3 + 1] = y;
+            in_verts_rational[i * 3 + 2] = z;
+        }
+
+
+
+    }
+
+    //if the patch contains the triangle with t_id
+    for(uint t_id : patch){
+        std::cout<<"Sono entrato per definire il raggio" << std::endl;
+        const uint tv[3] = {tm.triVertID(t_id, 0), tm.triVertID(t_id, 1), tm.triVertID(t_id, 2)};
+        std::vector<double> ray0 = {0, 0, 0};
+        std::vector<double> ray1 = {0, 0, 0};
+
+        std::vector<bigrational> x_rat(3), y_rat(3), z_rat(3);
+
+        for (int i = 0; i < 3; ++i) {
+            //setExplicitVertex(tm, in_verts_rational, tv[i], x_rat[i], y_rat[i], z_rat[i]);
+            tm.vert(tv[i])->getExactXYZCoordinates(x_rat[i], y_rat[i], z_rat[i]);
+        }
+
+        std::array<std::array<bigrational, 3>, 3> tv_rat;
+
+        tv_rat[0] = {x_rat[0], y_rat[0], z_rat[0]};  // Prima riga
+        tv_rat[1] = {x_rat[1], y_rat[1], z_rat[1]};  // Seconda riga
+        tv_rat[2] = {x_rat[2], y_rat[2], z_rat[2]};
+
+
+        int dir = maxComponentInTriangleNormalRationals(x_rat[0], y_rat[0], z_rat[0], x_rat[1], y_rat[1], z_rat[1], x_rat[2], y_rat[2], z_rat[2]);
+
+        bigrational centroid_x = (x_rat[0] + x_rat[1] + x_rat[2]) / bigrational(3);
+        bigrational centroid_y = (y_rat[0] + y_rat[1] + y_rat[2]) / bigrational(3);
+        bigrational centroid_z = (z_rat[0] + z_rat[1] + z_rat[2]) / bigrational(3);
+
+        rational_ray.v0 = {centroid_x, centroid_y, centroid_z};
+        if (dir == 0) { //direction x
+            if(t_id == 4233){
+                ray1 = {max_coords.x(), ray0[1], ray0[2]};
+            }
+            rational_ray.v1 = {bigrational(max_coords.x()), centroid_y, centroid_z};
+            rational_ray.dir = 'X';
+        } else if (dir == 1) { //direction y
+            if(t_id == 4233){
+                ray1 = {ray0[0], max_coords.y(), ray0[2]};
+            }
+            rational_ray.v1 = {centroid_x, bigrational(max_coords.y()), centroid_z};
+            rational_ray.dir = 'Y';
+        } else if (dir == 2) { //direction z
+            if(t_id == 4233){
+                ray1 = {ray0[0], ray0[1], max_coords.z()};
+            }
+            rational_ray.v1 = {centroid_x, centroid_y, bigrational(max_coords.z())};
+            rational_ray.dir = 'Z';
+        }else{
+            std::cout<<"Error in direction"<<std::endl;
+            std::exit(EXIT_FAILURE);
+        }
+
+        //check if the centroid is inside the triangle
+        //if (cinolib::orient3d(&tv_rat[0][0], &tv_rat[1][0], &tv_rat[2][0], &rational_ray.v0[0]).sgn() != 0) {
+        if (orient3dT(&tv_rat[0][0], &tv_rat[1][0], &tv_rat[2][0], &rational_ray.v0[0]) != 0) {
+            std::cout << "The centroid is not on the triangle or the orient3d doesn't work properly" << std::endl;
+            std::exit(EXIT_FAILURE);
+        }
+
+        //bigrational e0_rat = cinolib::orient3d(&tv_rat[0][0], &tv_rat[1][0], &rational_ray.v1[0], &rational_ray.v0[0]);
+        //bigrational e1_rat = cinolib::orient3d(&tv_rat[1][0], &tv_rat[2][0], &rational_ray.v1[0], &rational_ray.v0[0]);
+        //bigrational e2_rat = cinolib::orient3d(&tv_rat[2][0], &tv_rat[0][0], &rational_ray.v1[0], &rational_ray.v0[0]);
+
+        int e0_rat = orient3dT(&tv_rat[0][0], &tv_rat[1][0], &rational_ray.v1[0], &rational_ray.v0[0]);
+        int e1_rat = orient3dT(&tv_rat[1][0], &tv_rat[2][0], &rational_ray.v1[0], &rational_ray.v0[0]);
+        int e2_rat = orient3dT(&tv_rat[2][0], &tv_rat[0][0], &rational_ray.v1[0], &rational_ray.v0[0]);
+
+        //if((e0_rat > bigrational(0,0,0) && e1_rat > bigrational(0,0,0) && e2_rat > bigrational(0,0,0)) ||
+          // (e0_rat < bigrational(0,0,0) && e1_rat < bigrational(0,0,0) && e2_rat < bigrational(0,0,0))){
+          if((e0_rat > 0 && e1_rat > 0 && e2_rat > 0) || (e0_rat < 0 && e1_rat < 0 && e2_rat < 0)){
+
+            if(print_debug){
+                std::cout << "Triangle that create the ray: " << t_id <<  " Direction: " << rational_ray.dir << std::endl;
+
+                //print the coords of the ray
+                std::cout << "Ray v0: " << rational_ray.v0[0] << " " << rational_ray.v0[1] << " " << rational_ray.v0[2] << std::endl;
+                std::cout << "Ray v1: " << rational_ray.v1[0] << " " << rational_ray.v1[1] << " " << rational_ray.v1[2] << std::endl;
+            }
+
+            rational_ray.tv[0] = static_cast<int>(tm.triVertID(t_id, 0));
+            rational_ray.tv[1] = static_cast<int>(tm.triVertID(t_id, 1));
+            rational_ray.tv[2] = static_cast<int>(tm.triVertID(t_id, 2));
+
+            return;
+        } else{
+            std::exit(EXIT_FAILURE);
+        }
+    }
+    std::cout << "Something went wrong during the creation of the ray with a patch fully composed by implicit points" << std::endl;
+    std::exit(EXIT_FAILURE);
+}
+
+inline int maxComponentInTriangleNormalRationals(bigrational &ov1x, bigrational &ov1y, bigrational &ov1z, bigrational &ov2x, bigrational &ov2y, bigrational &ov2z, bigrational &ov3x, bigrational &ov3y, bigrational &ov3z)
+{
+    // Debugging prints
+    std::cout << "ov1x: " << ov1x << ", ov1y: " << ov1y << ", ov1z: " << ov1z << std::endl;
+    std::cout << "ov2x: " << ov2x << ", ov2y: " << ov2y << ", ov2z: " << ov2z << std::endl;
+    std::cout << "ov3x: " << ov3x << ", ov3y: " << ov3y << ", ov3z: " << ov3z << std::endl;
+
+    bigrational v3x = ov3x - ov2x;
+    bigrational v3y = ov3y - ov2y;
+    bigrational v3z = ov3z - ov2z;
+    bigrational v2x = ov2x - ov1x;
+    bigrational v2y = ov2y - ov1y;
+    bigrational v2z = ov2z - ov1z;
+
+    std::cout << "v3x: " << v3x << ", v3y: " << v3y << ", v3z: " << v3z << std::endl;
+    std::cout << "v2x: " << v2x << ", v2y: " << v2y << ", v2z: " << v2z << std::endl;
+
+    bigrational nvx = v2y * v3z - v2z * v3y;
+    bigrational nvy = v3x * v2z - v3z * v2x;
+    bigrational nvz = v2x * v3y - v2y * v3x;
+
+    std::cout << "nvx: " << nvx << ", nvy: " << nvy << ", nvz: " << nvz << std::endl;
+
+    bigrational nvxc = fabs(nvx);
+    bigrational nvyc = fabs(nvy);
+    bigrational nvzc = fabs(nvz);
+
+    std::cout << "nvxc: " << nvxc << ", nvyc: " << nvyc << ", nvzc: " << nvzc << std::endl;
+
+    if (nvxc >= nvyc && nvxc >= nvzc) return 0;
+    if (nvyc >= nvxc && nvyc >= nvzc) return 1;
+    return 2;
+}
+
+
+
+inline bigrational fabs(bigrational x)
+{
+    return (x < bigrational()) ? x.negation() : x;
 }

@@ -10,7 +10,7 @@ set(ENABLE_AVX2 True)
 
 
 # specify the C++ standard
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # set the project name
@@ -22,26 +22,75 @@ add_subdirectory(arrangements/external/oneTBB)
 
 
 # add the executable
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} main.cpp
+        rationals_code/intersect_custom.h rationals_code/intersect_custom.cpp
+        rationals_code/intersect_point_rationals.h rationals_code/intersect_point_rationals.cpp
+)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     ./
     code/
     arrangements/code/
     arrangements/external/Indirect_Predicates/include/
+        rationals_code/
+)
+
+
+add_executable(${PROJECT_NAME}_bug main_bug.cpp
+        rationals_code/intersect_custom.h rationals_code/intersect_custom.cpp
+        rationals_code/intersect_point_rationals.h rationals_code/intersect_point_rationals.cpp
+)
+
+target_include_directories(${PROJECT_NAME}_bug PUBLIC
+        ./
+        code/
+        arrangements/code/
+        arrangements/external/Indirect_Predicates/include/
+        rationals_code/
 )
 
 set(cinolib_DIR ${PROJECT_SOURCE_DIR}/arrangements/external/Cinolib)
-set(CINOLIB_USES_OPENGL_GLFW_IMGUI ON)
+set(CINOLIB_USES_OPENGL_GLFW_IMGUI   ON)
 set(CINOLIB_USES_SHEWCHUK_PREDICATES ON)
+set(CINOLIB_USES_CGAL_GMP_MPFR       ON)
 
+find_package(CGAL REQUIRED COMPONENTS Core)
+target_link_libraries(mesh_booleans CGAL::CGAL)
 find_package(cinolib REQUIRED)
+
+
 
 target_link_libraries(${PROJECT_NAME} cinolib)
 target_link_libraries(${PROJECT_NAME} tbb)
 target_compile_definitions(${PROJECT_NAME} PUBLIC TBB_PARALLEL=1)
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/arrangements/external/abseil-cpp/)
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/arrangements/external/oneTBB/)
+
+
+
+target_link_libraries(${PROJECT_NAME}_bug cinolib)
+target_link_libraries(${PROJECT_NAME}_bug tbb)
+target_link_libraries(${PROJECT_NAME}_bug CGAL::CGAL)
+
+find_package(CGAL REQUIRED COMPONENTS Core)
+
+# Check if CGAL::Core exists before linking
+if(TARGET CGAL::Core)
+        target_link_libraries(${PROJECT_NAME} CGAL::Core)
+        target_link_libraries(${PROJECT_NAME}_bug CGAL::Core)
+else()
+        target_link_libraries(${PROJECT_NAME} CGAL::CGAL)
+        target_link_libraries(${PROJECT_NAME}_bug CGAL::CGAL)
+endif()
+
+
+target_compile_definitions(${PROJECT_NAME}_bug PUBLIC TBB_PARALLEL=1)
+target_include_directories(${PROJECT_NAME}_bug PUBLIC ${PROJECT_SOURCE_DIR}/arrangements/external/abseil-cpp/)
+target_include_directories(${PROJECT_NAME}_bug PUBLIC ${PROJECT_SOURCE_DIR}/arrangements/external/oneTBB/)
+
+
+
+
 
 
 add_executable(${PROJECT_NAME}_rotation main-rotation.cpp)
@@ -81,6 +130,7 @@ target_include_directories(${PROJECT_NAME}_stencil PUBLIC
     code/
     arrangements/code/
     arrangements/external/Indirect_Predicates/include/
+        rationals_code/
 )
 
 target_link_libraries(${PROJECT_NAME}_stencil cinolib)

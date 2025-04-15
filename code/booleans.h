@@ -45,7 +45,14 @@
 #include "triangulation.h"
 #include <cinolib/octree.h>
 
+
+#include "intersect_custom.h"
+#include "rationals_code/intersect_point_rationals.h"
+#include <regex>
+
 #include <bitset>
+
+#include <code/triangles_intersections/orientTemplated.h>
 
 struct Labels
 {
@@ -208,6 +215,27 @@ inline void loadInputWithLabels(const std::string &filename, std::vector<double>
 
 inline void loadInputWithLabels(const std::string &filename, std::vector<double> &coords, std::vector<uint> &tris, std::vector<uint> &labels);
 
+/***********************************************************/
+///_:::::::::::::::::: RATIONALS STRUCTS ::::::::::::::::::::::::::::::::::::::::::::
+struct RationalRay{
+    std::array<bigrational,3> v0;
+    std::array<bigrational,3> v1;
+    char dir = 'X';
+    int tv[3] = {-1, -1, -1};
+
+};
+
+struct BoundingBox {
+    bigrational xmin, xmax, ymin, ymax, zmin, zmax;
+};
+
+inline void computeInsideOutCustom(const FastTrimesh &tm, const std::vector<phmap::flat_hash_set<uint>> &patches, const cinolib::Octree &octree,
+                                   const std::vector<genericPoint *> &in_verts, const std::vector<uint> &in_tris,
+                                   const std::vector<std::bitset<NBIT>> &in_labels, const cinolib::vec3d &max_coords, Labels &labels);
+
+inline void findRayEndpointsCustom(const FastTrimesh &tm, const phmap::flat_hash_set<uint> &patch, const cinolib::vec3d &max_coords, Ray &ray, RationalRay &rational_ray, const std::vector<genericPoint *> &in_verts, std::vector<bigrational> &in_verts_rational, bool &is_rational, bool debug);
+inline int maxComponentInTriangleNormalRationals(bigrational &ov1x, bigrational &ov1y, bigrational &ov1z, bigrational &ov2x, bigrational &ov2y, bigrational &ov2z, bigrational &ov3x, bigrational &ov3y, bigrational &ov3z);
+inline bigrational fabs(bigrational x);
 #include "booleans.cpp"
 
 #endif //EXACT_BOOLEANS_BOOLEANS_H
