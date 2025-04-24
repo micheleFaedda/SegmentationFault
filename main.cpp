@@ -25,7 +25,7 @@ int main()
         y = y / delta;
         z = z / delta;
 
-        divideByDelta(delta, x, y, z);
+        divideByDeltaAndOrient3D(delta, x, y, z);
 
     }
 

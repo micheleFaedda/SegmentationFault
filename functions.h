@@ -6,10 +6,13 @@
 #define FUNCTIONS_H
 #include "numerics.h"
 
-void divideByDelta(const bigrational &delta,
+void divideByDeltaAndOrient3D(const bigrational &delta,
                          bigrational &x,
                          bigrational &y,
                          bigrational &z);
 
-bigrational orient3D(const bigrational *p0, const bigrational *p1, const bigrational *p2, const bigrational *p3);
+bigrational orient_3d_bigrational (const bigrational *pa ,
+                                   const bigrational *pb ,
+                                   const bigrational *pc ,
+                                   const bigrational *pd);
 #endif //FUNCTIONS_H
