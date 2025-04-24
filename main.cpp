@@ -1,4 +1,5 @@
 #include <implicit_point.h>
+#include <functions.h>
 
 int main()
 {
@@ -18,12 +19,16 @@ int main()
     bigrational delta = bigrational(-23121312331.5435345345);
     LPI->getExactXYZCoordinates(x,y,z); /**Exact crash point**/
 
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < 100; ++i)
     {
         x = x / delta;
         y = y / delta;
         z = z / delta;
+
+        divideByDelta(delta, x, y, z);
+
     }
+
 
     return 0;
 }

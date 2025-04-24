@@ -3,7 +3,9 @@
 # set the project name
 project(rationals_issues)
 
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} main.cpp
+        functions.cpp
+        functions.h)
 target_include_directories(${PROJECT_NAME} PUBLIC ./include)
 
 # Set the target architecture.
@@ -17,8 +19,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC ./include)
 
 #							#Generic build
 #set(ENABLE_SSE2 True)		#Build for x86-64 with SSE2
-#set(ENABLE_AVX2 True)		#Build for x86-64 with AVX2
-set(ENABLE_ARMNEON True)	#Build for ARM with NEON
+set(ENABLE_AVX2 True)		#Build for x86-64 with AVX2
+#set(ENABLE_ARMNEON True)	#Build for ARM with NEON
 
 # --------- DON NOT EDIT BELOW THIS LINE! --------
 
@@ -49,7 +51,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         endif()
 else()
         # set max optimization
-        target_compile_options(${PROJECT_NAME} PUBLIC -O3)
+        target_compile_options(${PROJECT_NAME} PUBLIC -O2)
         # grant IEEE 754 compliance
         target_compile_options(${PROJECT_NAME} PUBLIC -frounding-math)
         # set target architecture
