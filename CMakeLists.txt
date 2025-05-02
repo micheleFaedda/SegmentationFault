@@ -4,8 +4,9 @@
 project(rationals_issues)
 
 add_executable(${PROJECT_NAME} main.cpp
-        functions.cpp
-        functions.h)
+        #functions.cpp
+        #functions.h
+)
 target_include_directories(${PROJECT_NAME} PUBLIC ./include)
 
 # Set the target architecture.
@@ -51,7 +52,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         endif()
 else()
         # set max optimization
-        target_compile_options(${PROJECT_NAME} PUBLIC -O2)
+        target_compile_options(${PROJECT_NAME} PUBLIC -O3)
         # grant IEEE 754 compliance
         target_compile_options(${PROJECT_NAME} PUBLIC -frounding-math)
         # set target architecture

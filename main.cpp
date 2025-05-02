@@ -1,33 +1,40 @@
 #include <implicit_point.h>
-#include <functions.h>
 
 int main()
 {
-    const genericPoint * P = new explicitPoint3D(-3187387764.50317621, 1126377053.35020828, 188836791.971181154);
-    const genericPoint * Q = new explicitPoint3D(-3149376875.99077082, 1267182566.25400305, 66971483.9567909241);
-    const genericPoint * R = new explicitPoint3D(-3076994817.51175404, 1138988462.58166265, 171892881.34736976);
-    const genericPoint * S = new explicitPoint3D(-3234895480.78921461, 1320481356.62345767, 195023508.552951127);
-    const genericPoint * T = new explicitPoint3D(-3270817787.86637497, 1300215181.04815841, 1.39057735376339457e-06);
+    const bigrational s0[] = {bigrational(bignatural(static_cast<uint32_t>(28954682368)), bignatural(static_cast<uint32_t> (3)), 1),
+                        bigrational(bignatural(static_cast<uint32_t>(18845212751614903)), bignatural(static_cast<uint32_t> (36291456)), -1),
+                        bigrational(bignatural(static_cast<uint32_t>(1242883924321459)), bignatural(static_cast<uint32_t> (2097152)), -1)
+    };
 
-    implicitPoint3D_LPI * LPI = new implicitPoint3D_LPI(P->toExplicit3D(),
-                                                 Q->toExplicit3D(),
-                                                 R->toExplicit3D(),
-                                                 S->toExplicit3D(),
-                                                 T->toExplicit3D());
+    const bigrational s1[] = {bigrational(bignatural(static_cast<uint32_t>(28954718211)), bignatural(static_cast<uint32_t> (2)), 1),
+                        bigrational(bignatural(static_cast<uint32_t>(18845212751614903)), bignatural(static_cast<uint32_t> (36291456)), -1),
+                        bigrational(bignatural(static_cast<uint32_t>(1242883924321459)), bignatural(static_cast<uint32_t> (2097152)), -1)
+    };
 
-    bigrational x, y, z;
-    bigrational delta = bigrational(-23121312331.5435345345);
-    LPI->getExactXYZCoordinates(x,y,z); /**Exact crash point**/
 
-    for (int i = 0; i < 100; ++i)
-    {
-        x = x / delta;
-        y = y / delta;
-        z = z / delta;
+    std::cout << "Values" << std::endl;
+    std::cout << "s0 x y z coords: " << s0[0] << " " << s0[1] << " " << s0[2] << std::endl;
+    std::cout << "s1 x y z coords: " << s1[0] << " " << s1[1] << " " << s1[2] << std::endl;
+    std::cout << std::endl;
 
-        divideByDeltaAndOrient3D(delta, x, y, z);
+    std::cout << "Are equals? " << std::endl;
+    const char *x_equals = s0[0] == s1[0] ? "yes" : "no";
+    std::cout << "s0_x == s1_x: " << x_equals<< std::endl;
 
-    }
+    const char *y_equals = s0[1] == s1[1] ? "yes" : "no";
+    std::cout << "s0_y == s1_y: " << y_equals<< std::endl;
+
+    const char *z_equals = s0[2] == s1[2] ? "yes" : "no";
+
+    std::cout << "s0_z == s1_z: " << z_equals<< std::endl;
+
+    std::cout << std::endl;
+    const bigrational distance = (s1[0] - s0[0]) * (s1[0] - s0[0]) +
+                              (s1[1] - s0[1]) * (s1[1] - s0[1]) +
+                              (s1[2] - s0[2]) * (s1[2] - s0[2]);
+    std::cout << std::endl;
+    std::cout << "Distance: " << distance << std::endl;
 
 
     return 0;
